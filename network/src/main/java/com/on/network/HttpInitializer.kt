@@ -23,7 +23,7 @@ class HttpInitializer : Initializer<Unit> {
             val baseUrl = BuildConfig.BASE_URL
             val token = BuildConfig.TOKEN
             val enableLog = BuildConfig.ENABLE_LOG
-            val builder = HttpClientImp.Builder(baseUrl, token)
+            val builder = HttpClientImp.Builder(baseUrl)
                 .setTimeout(1000L)
                 .enableLog(enableLog, HttpLoggingInterceptor.Level.BODY)
             builder.build()

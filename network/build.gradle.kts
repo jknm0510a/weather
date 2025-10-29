@@ -57,7 +57,7 @@ dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
-    implementation(libs.retrofit)
+    api(libs.retrofit)
     implementation(libs.startup)
     implementation(libs.retrofit.converter.gson)
     implementation(libs.retrofit.logging.interceptor)
