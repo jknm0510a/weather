@@ -1,14 +1,8 @@
-import java.util.Properties
-import java.io.FileInputStream
 plugins {
     alias(libs.plugins.android.library)
     alias(libs.plugins.kotlin.android)
 }
-val localProperties = Properties()
-val localPropertiesFile = rootProject.file("local.properties")
-if (localPropertiesFile.exists()) {
-    localProperties.load(FileInputStream(localPropertiesFile))
-}
+
 android {
     namespace = "com.on.network"
     compileSdk = 36
@@ -18,13 +12,8 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         consumerProguardFiles("consumer-rules.pro")
 
-        // 從 localProperties 讀取 token，如果找不到就給一個預設的空值
-        val apiToken = localProperties.getProperty("config.token", "")
-        buildConfigField("String", "TOKEN", "\"$apiToken\"")
-
-        // 從 localProperties 讀取 url，如果找不到就給一個預設的空值
-        val apiUrl = localProperties.getProperty("config.url", "")
-        buildConfigField("String", "BASE_URL", "\"$apiUrl\"")
+        buildConfigField("String", "WETHER_BASE_URL", "\"http://api.weatherapi.com/v1/\"")
+        buildConfigField("String", "CITY_BASE_URL", "\"https://restcountries.com/v3.1/\"")
     }
 
     buildTypes {

@@ -6,6 +6,7 @@ import androidx.startup.Initializer
 import com.on.network._interface.IHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import org.koin.core.context.loadKoinModules
+import org.koin.core.qualifier.named
 import org.koin.dsl.module
 
 class HttpInitializer : Initializer<Unit> {
@@ -19,14 +20,21 @@ class HttpInitializer : Initializer<Unit> {
     }
 
     val httpModule = module {
-        single<IHttpClient> {
-            val baseUrl = BuildConfig.BASE_URL
-            val token = BuildConfig.TOKEN
+        single<IHttpClient>(named("weather")) {
+            val baseUrl = BuildConfig.WETHER_BASE_URL
             val enableLog = BuildConfig.ENABLE_LOG
-            val builder = HttpClientImp.Builder(baseUrl)
+            HttpClientImp.Builder(baseUrl)
                 .setTimeout(1000L)
                 .enableLog(enableLog, HttpLoggingInterceptor.Level.BODY)
-            builder.build()
+                .build()
+        }
+        single<IHttpClient>(named("city")) {
+            val baseUrl = BuildConfig.CITY_BASE_URL
+            val enableLog = BuildConfig.ENABLE_LOG
+            HttpClientImp.Builder(baseUrl)
+                .setTimeout(1000L)
+                .enableLog(enableLog, HttpLoggingInterceptor.Level.BODY)
+                .build()
         }
     }
 

@@ -1,4 +1,4 @@
-package com.on.network.data
+package com.on.weather.data
 
 data class CityWeatherData(
     val location: Location,

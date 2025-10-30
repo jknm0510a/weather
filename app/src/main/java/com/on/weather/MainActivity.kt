@@ -50,7 +50,7 @@ fun Greeting(
     modifier: Modifier = Modifier,
     viewModel: MainViewModel = koinViewModel()
 ) {
-    viewModel.test()
+    viewModel.getCityWeather("ddd")
     Text(
         text = "Hello $name!",
         modifier = modifier
