@@ -52,6 +52,7 @@ dependencies {
     implementation(libs.koin)
     implementation(libs.koin.compose)
     implementation(libs.startup)
+    implementation(libs.google.services)
     testImplementation(libs.junit)
     implementation(project(":network"))
     androidTestImplementation(libs.androidx.junit)

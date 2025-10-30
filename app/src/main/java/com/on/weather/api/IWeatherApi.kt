@@ -10,6 +10,6 @@ interface IWeatherApi: IApi {
     @GET("current.json")
     suspend fun getCityWeather(
         @Query("key") token: String,
-        @Query("q") city: String,
+        @Query("q") q: String,  //q can be location or city name
     ): Response<CityWeatherData>
 }

@@ -5,18 +5,21 @@ import com.on.network._interface.IHttpClient
 import com.on.network.data.UserInfo.TOKEN
 import com.on.weather.api.ICityApi
 import com.on.weather.api.IWeatherApi
-import kotlinx.coroutines.launch
 
 class MainRepository(
     private val weatherClient: IHttpClient,
     private val cityClient: IHttpClient
 ) {
-    suspend fun test() {
+    suspend fun getCityWeatherByLocation(lat: Double, lon: Double) {
+        getWeather("$lat,$lon")
+    }
+
+    suspend fun getWeather(q: String) {
         val token = TOKEN
         val api = weatherClient.create(IWeatherApi::class.java)
         weatherClient.sendRequest(
             request = {
-                api.getCityWeather(token,"taoyuan")
+                api.getCityWeather(token, q)
             },
             onSuccess = {
                 println(it)

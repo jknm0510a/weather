@@ -1,9 +1,12 @@
-package com.on.weather
+package com.on.weather.initializer
 
 import android.content.Context
+import android.util.Log
 import androidx.startup.Initializer
 import com.on.network.HttpInitializer
+import org.koin.android.ext.koin.androidContext
 import com.on.weather.repo.MainRepository
+import com.on.weather.utils.LocationProvider
 import com.on.weather.viewmodel.MainViewModel
 import org.koin.core.context.loadKoinModules
 import org.koin.core.module.dsl.viewModel
@@ -23,16 +26,22 @@ class AppInitializer : Initializer<Unit> {
     }
 
     val viewmodelModule = module {
-        viewModel { MainViewModel(get()) }
+        viewModel { MainViewModel(get(), get()) }
     }
     val repoModule = module {
-        factory { MainRepository(
-            get(named("weather")),
-            get(named("city"))
-        ) }
+        factory {
+            MainRepository(
+                get(named("weather")),
+                get(named("city"))
+            )
+        }
+    }
+
+    val utilsModule = module {
+        factory { LocationProvider(androidContext()) }
     }
 
     val moduleList = arrayListOf(
-        viewmodelModule, repoModule
+        utilsModule, viewmodelModule, repoModule
     )
 }
