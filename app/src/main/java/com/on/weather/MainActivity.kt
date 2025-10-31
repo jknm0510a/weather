@@ -42,6 +42,7 @@ class MainActivity : ComponentActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        checkAndRequestLocationPermission()
         enableEdgeToEdge()
         setContent {
             WeatherTheme {
@@ -53,11 +54,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-
-    override fun onCreateView(name: String, context: Context, attrs: AttributeSet): View? {
-        checkAndRequestLocationPermission()
-        return super.onCreateView(name, context, attrs)
     }
 
     private fun checkAndRequestLocationPermission() {

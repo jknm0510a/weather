@@ -5,8 +5,6 @@ import androidx.lifecycle.viewModelScope
 import com.on.weather.repo.MainRepository
 import com.on.weather.utils.LocationProvider
 import kotlinx.coroutines.launch
-import org.koin.core.component.KoinComponent
-import org.koin.core.component.inject
 
 class MainViewModel(
     val repository: MainRepository,

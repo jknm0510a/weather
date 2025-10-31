@@ -19,10 +19,14 @@ class MainRepository(
         val api = weatherClient.create(IWeatherApi::class.java)
         weatherClient.sendRequest(
             request = {
-                api.getCityWeather(token, q)
+                api.getCityForecastWeather(
+                    token = token,
+                    q = q,
+                    days = 7,
+                )
             },
             onSuccess = {
-                println(it)
+                println(it.forecast.forecastday.size)
             },
             onFailure = { code, _, _ ->
                 code
@@ -32,17 +36,17 @@ class MainRepository(
 
     suspend fun test2() {
         val api = cityClient.create(ICityApi::class.java)
-        cityClient.sendRequest(
-            request = {
-                api.getAllCity()
-            },
-            onSuccess = {
-                println(it)
-            },
-            onFailure = { code, _, _ ->
-                code
-            }
-        )
+//        cityClient.sendRequest(
+//            request = {
+//                api.getAllCity()
+//            },
+//            onSuccess = {
+//                println(it)
+//            },
+//            onFailure = { code, _, _ ->
+//                code
+//            }
+//        )
     }
 
 }
