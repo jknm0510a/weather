@@ -2,6 +2,7 @@ package com.on.network._interface
 
 import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
+import com.on.network.data.ApiResponseData
 import retrofit2.Response
 
 interface IHttpClient {
@@ -9,7 +10,5 @@ interface IHttpClient {
 
     suspend fun <T> sendRequest(
         @WorkerThread request: suspend () -> Response<T>,
-        @UiThread onSuccess: (T) -> Unit = { },
-        @UiThread onFailure: (code: Int, message: String?, throwable: Throwable?) -> Unit = { _, _, _ -> },
-    )
+    ) : ApiResponseData<T>
 }

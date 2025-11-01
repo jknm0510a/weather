@@ -1,7 +1,10 @@
 package com.on.weather.viewmodel
 
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import com.on.network.data.ApiFailedResponse
 import com.on.weather.repo.MainRepository
 import com.on.weather.utils.LocationProvider
 import kotlinx.coroutines.launch
@@ -16,18 +19,26 @@ class MainViewModel(
         }
     }
 
+    private val _errorMessageLiveData = MutableLiveData<ApiFailedResponse>()
+    val errorMessageLiveData: LiveData<ApiFailedResponse>
+        get() = _errorMessageLiveData
+
+
     fun fetchCurrentLocation() {
         viewModelScope.launch {
             try {
                 val location = locationProvider.getCurrentLocation()
-                // 在這裡你可以接著呼叫 Repository 的方法去獲取天氣資訊
-                 repository.getCityWeatherByLocation(location.latitude, location.longitude)
+
+                val res = repository.getCityWeatherByLocation(location.latitude, location.longitude)
+                if (res.hasError) {
+                    _errorMessageLiveData.value = res.error!!
+                } else if (res.data != null){
+                    val data = res.data!!
+                }
 
             } catch (e: SecurityException) {
-//                _errorMessage.value = "定位權限未授予，無法獲取位置。"
                 e.printStackTrace()
             } catch (e: Exception) {
-//                _errorMessage.value = "無法獲取位置: ${e.message}"
                 e.printStackTrace()
             }
         }

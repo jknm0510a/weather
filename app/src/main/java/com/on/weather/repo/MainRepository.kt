@@ -2,34 +2,30 @@ package com.on.weather.repo
 
 import androidx.lifecycle.viewModelScope
 import com.on.network._interface.IHttpClient
+import com.on.network.data.ApiResponseData
 import com.on.network.data.UserInfo.TOKEN
 import com.on.weather.api.ICityApi
 import com.on.weather.api.IWeatherApi
+import com.on.weather.data.CityForecastWeatherData
 
 class MainRepository(
     private val weatherClient: IHttpClient,
     private val cityClient: IHttpClient
 ) {
-    suspend fun getCityWeatherByLocation(lat: Double, lon: Double) {
-        getWeather("$lat,$lon")
+    suspend fun getCityWeatherByLocation(lat: Double, lon: Double): ApiResponseData<CityForecastWeatherData> {
+        return getWeather("$lat,$lon")
     }
 
-    suspend fun getWeather(q: String) {
+    suspend fun getWeather(q: String): ApiResponseData<CityForecastWeatherData> {
         val token = TOKEN
         val api = weatherClient.create(IWeatherApi::class.java)
-        weatherClient.sendRequest(
+        return weatherClient.sendRequest(
             request = {
                 api.getCityForecastWeather(
                     token = token,
                     q = q,
                     days = 7,
                 )
-            },
-            onSuccess = {
-                println(it.forecast.forecastday.size)
-            },
-            onFailure = { code, _, _ ->
-                code
             }
         )
     }

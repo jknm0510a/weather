@@ -4,6 +4,8 @@ import androidx.annotation.UiThread
 import androidx.annotation.WorkerThread
 import com.on.network._interface.IApi
 import com.on.network._interface.IHttpClient
+import com.on.network.data.ApiFailedResponse
+import com.on.network.data.ApiResponseData
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -30,43 +32,62 @@ class HttpClientImp(
 
     override suspend fun <T> sendRequest(
         @WorkerThread request: suspend () -> Response<T>,
-        @UiThread onSuccess: (T) -> Unit,
-        @UiThread onFailure: (code: Int, message: String?, throwable: Throwable?) -> Unit,
-    ) {
+    ) : ApiResponseData<T> {
         try {
             val response = request()
             if (response.isSuccessful) {
                 val body = response.body()
                 if (body != null) {
-                    withContext(Dispatchers.Main) {
-                        onSuccess(body)
-                    }
+                    return ApiResponseData(body)
                 } else {
-                    withContext(Dispatchers.Main) {
-                        onFailure(response.code(), "Body is Empty!", null)
-                    }
+                    return ApiResponseData(
+                        data = null,
+                        hasError = true,
+                        error = ApiFailedResponse(
+                            response.code(),
+                            "Body is Empty!",
+                            null
+                        )
+                    )
                 }
             } else {
-                withContext(Dispatchers.Main) {
-                    onFailure(response.code(), response.message(), null)
-                }
+                return ApiResponseData(
+                    data = null,
+                    hasError = true,
+                    error = ApiFailedResponse(
+                        response.code(),
+                        response.message(),
+                        null
+                    )
+                )
             }
         } catch (e: Exception) {
             when(e) {
                 is SocketException,
                 is UnknownHostException,
                 is IOException -> {
-                    withContext(Dispatchers.Main) {
-                        onFailure(-1, "Network Error!", null)
-                    }
+                    return ApiResponseData(
+                        data = null,
+                        hasError = true,
+                        error = ApiFailedResponse(
+                            -1,
+                            "Network Error!",
+                            e
+                        )
+                    )
                 }
                 else -> {
-                    withContext(Dispatchers.Main) {
-                        onFailure(-1, "Unknown Error!", null)
-                    }
+                    return ApiResponseData(
+                        data = null,
+                        hasError = true,
+                        error = ApiFailedResponse(
+                            -2,
+                            "Unknown Error!",
+                            e
+                        )
+                    )
                 }
             }
-            onFailure(0, null, e)
         }
     }
 
