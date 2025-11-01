@@ -1,12 +1,14 @@
 package com.on.weather.viewmodel
 
-import android.provider.Contacts
+import android.util.Range
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.on.network.data.ApiFailedResponse
 import com.on.weather.data.CityForecastWeatherData
+import com.on.weather.data.ForecastDay
+import com.on.weather.data.Hour
 import com.on.weather.data.UiState
 import com.on.weather.repo.MainRepository
 import com.on.weather.utils.LocationProvider
@@ -35,9 +37,18 @@ class MainViewModel(
                 _uiState.value = UiState.FAILED
             } else if (res.data != null) {
                 _weatherLiveData.value = res.data!!
+                process24HoursForecast(res.data!!.forecast.forecastday)
                 _uiState.value = UiState.SUCCESS
             }
         }
+    }
+
+    fun process24HoursForecast(forecastday: List<ForecastDay>) {
+        val start = (System.currentTimeMillis() / 1000) - 60*60
+        val end = start + 24*60*60
+        val range = Range(start, end )
+        val hours = forecastday.flatMap { it.hour }.filter { it.time_epoch in range }.toList()
+        _hoursLiveData.value = hours
     }
 
     private val _uiState = MutableStateFlow(UiState.INIT)
@@ -50,6 +61,10 @@ class MainViewModel(
     private val _weatherLiveData = MutableStateFlow<CityForecastWeatherData?>(null)
     val weatherLiveData: StateFlow<CityForecastWeatherData?>
         get() = _weatherLiveData
+
+    private val _hoursLiveData = MutableStateFlow<List<Hour>?>(null)
+    val hourLiveData: StateFlow<List<Hour>?>
+        get() = _hoursLiveData
 
     fun fetchCurrentLocation() {
         viewModelScope.launch {

@@ -1,15 +1,14 @@
 package com.on.weather.initializer
 
 import android.content.Context
-import android.util.Log
 import androidx.startup.Initializer
 import com.on.network.HttpInitializer
 import org.koin.android.ext.koin.androidContext
 import com.on.weather.repo.MainRepository
 import com.on.weather.utils.LocationProvider
 import com.on.weather.viewmodel.MainViewModel
+import org.koin.androidx.viewmodel.dsl.viewModel
 import org.koin.core.context.loadKoinModules
-import org.koin.core.module.dsl.viewModel
 import org.koin.core.qualifier.named
 import org.koin.dsl.module
 

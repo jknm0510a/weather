@@ -14,6 +14,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -22,6 +23,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
@@ -36,15 +40,21 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.text
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.viewmodel.compose.viewModel
+import coil.compose.AsyncImage
+import coil.compose.rememberAsyncImagePainter
+import coil.request.ImageRequest
 import com.on.weather.data.CityForecastWeatherData
+import com.on.weather.data.Hour
 import com.on.weather.data.UiState
 import com.on.weather.ui.theme.WeatherTheme
 import com.on.weather.viewmodel.MainViewModel
@@ -140,6 +150,7 @@ fun WeatherView(
     weatherData: CityForecastWeatherData
 ) {
     val viewmodel: MainViewModel = viewModel()
+    val hours by viewmodel.hourLiveData.collectAsState()
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
         //Background
         Box(modifier = Modifier.fillMaxSize()) {
@@ -214,17 +225,26 @@ fun WeatherView(
                     )
                 }
 
-
-                Box(
+                Row(
                     modifier = Modifier
                         .clip(RoundedCornerShape(16.dp))
                         .background(Color.White.copy(alpha = 0.2f))
                         .padding(horizontal = 24.dp, vertical = 16.dp)
                 ) {
-                    Row {
-                        InfoItem(title = stringResource(R.string.wind_speed), value = "${weatherData.current.wind_kph} kph")
-                        Spacer(modifier = Modifier.width(32.dp))
-                        InfoItem(title = stringResource(R.string.humidity), value = "${weatherData.current.humidity}%")
+                    InfoItem(title = stringResource(R.string.wind_speed), value = "${weatherData.current.wind_kph} kph")
+                    Spacer(modifier = Modifier.width(32.dp))
+                    InfoItem(title = stringResource(R.string.humidity), value = "${weatherData.current.humidity}%")
+                }
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                LazyRow(
+                    contentPadding = PaddingValues(horizontal = 0.dp),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    modifier = Modifier.padding(top = 24.dp)
+                ) {
+                    itemsIndexed(hours?:listOf()) { index, hour ->
+                        HourlyForecastItem(index, hour = hour)
                     }
                 }
             }
@@ -238,5 +258,40 @@ private fun InfoItem(title: String, value: String) {
         Text(text = title, color = Color.White.copy(alpha = 0.8f), fontSize = 14.sp)
         Spacer(modifier = Modifier.height(4.dp))
         Text(text = value, color = Color.White, fontSize = 18.sp, fontWeight = FontWeight.Bold)
+    }
+}
+
+@Composable
+private fun HourlyForecastItem(index: Int, hour: Hour) {
+    val time = hour.time.substringAfter(" ")
+    Column(
+        modifier = Modifier
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.15f)) // 半透明背景
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(8.dp) // 內部元件的垂直間距
+    ) {
+        Text(
+            text = if (index == 0) stringResource(R.string.now) else time,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+
+        Image(
+            painter = rememberAsyncImagePainter("https:${hour.condition.icon}"),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .width(40.dp)
+                .height(40.dp)
+        )
+
+        Text(
+            text = "${hour.temp_c}°",
+            color = Color.White,
+            fontSize = 18.sp
+        )
     }
 }
