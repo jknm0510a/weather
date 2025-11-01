@@ -7,16 +7,13 @@ import com.on.network.data.UserInfo.TOKEN
 import com.on.weather.api.ICityApi
 import com.on.weather.api.IWeatherApi
 import com.on.weather.data.CityForecastWeatherData
+import com.on.weather.data.Day
 
 class MainRepository(
     private val weatherClient: IHttpClient,
     private val cityClient: IHttpClient
 ) {
-    suspend fun getCityWeatherByLocation(lat: Double, lon: Double): ApiResponseData<CityForecastWeatherData> {
-        return getWeather("$lat,$lon")
-    }
-
-    suspend fun getWeather(q: String): ApiResponseData<CityForecastWeatherData> {
+    suspend fun getWeather(q: String, day: Int): ApiResponseData<CityForecastWeatherData> {
         val token = TOKEN
         val api = weatherClient.create(IWeatherApi::class.java)
         return weatherClient.sendRequest(
