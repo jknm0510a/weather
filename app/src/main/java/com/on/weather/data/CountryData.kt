@@ -21,3 +21,9 @@ data class NativeLanguage(
     val official: String,
     val common: String
 )
+
+data class SimpleCityData(
+    val cityName: String,
+    val capitalInfo: CapitalInfo?,
+    val countryName: String,
+)

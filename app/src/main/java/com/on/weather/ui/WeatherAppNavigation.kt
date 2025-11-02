@@ -70,6 +70,7 @@ fun WeatherAppNavigation() {
             }
         ) {
             CitySelectionScreen(
+                viewModel,
                 onNavigateBack = {
                     navController.popBackStack() // 返回上一個畫面
                 }

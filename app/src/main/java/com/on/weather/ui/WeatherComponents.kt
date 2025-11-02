@@ -2,6 +2,7 @@ package com.on.weather.ui
 
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,6 +28,7 @@ import coil.compose.rememberAsyncImagePainter
 import com.on.weather.R
 import com.on.weather.data.ForecastDay
 import com.on.weather.data.Hour
+import com.on.weather.data.SimpleCityData
 
 @Composable
 fun InfoItem(title: String, value: String) {
@@ -110,6 +112,36 @@ fun DailyForecastItem(index: Int, forecastDay: ForecastDay) {
             text = "${forecastDay.day.maxtemp_c}°C - ${forecastDay.day.mintemp_c}°C",
             color = colorResource(R.color.text_color),
             fontSize = 16.sp
+        )
+    }
+}
+
+@Composable
+fun CityItem(
+    simpleCountryData: SimpleCityData,
+    onClick: (String) -> Unit,
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .clickable { onClick(simpleCountryData.cityName) }
+            .background(Color.White.copy(alpha = 0.15f))
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        Text(
+            text =  simpleCountryData.cityName,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+        Spacer(Modifier.weight(1f))
+        Text(
+            text =  simpleCountryData.countryName,
+            color = Color.White,
+            fontSize = 14.sp,
         )
     }
 }

@@ -7,6 +7,7 @@ import com.on.network.data.UserInfo.TOKEN
 import com.on.weather.api.ICityApi
 import com.on.weather.api.IWeatherApi
 import com.on.weather.data.CityForecastWeatherData
+import com.on.weather.data.CountryData
 import com.on.weather.data.Day
 
 class MainRepository(
@@ -27,19 +28,13 @@ class MainRepository(
         )
     }
 
-    suspend fun test2() {
+    suspend fun getCities(): ApiResponseData<List<CountryData>> {
         val api = cityClient.create(ICityApi::class.java)
-//        cityClient.sendRequest(
-//            request = {
-//                api.getAllCity()
-//            },
-//            onSuccess = {
-//                println(it)
-//            },
-//            onFailure = { code, _, _ ->
-//                code
-//            }
-//        )
+        return cityClient.sendRequest(
+            request = {
+                api.getAllCity()
+            }
+        )
     }
 
 }

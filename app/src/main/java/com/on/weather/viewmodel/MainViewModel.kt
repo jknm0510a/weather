@@ -9,6 +9,7 @@ import com.on.network.data.ApiFailedResponse
 import com.on.weather.data.CityForecastWeatherData
 import com.on.weather.data.ForecastDay
 import com.on.weather.data.Hour
+import com.on.weather.data.SimpleCityData
 import com.on.weather.data.UiState
 import com.on.weather.repo.MainRepository
 import com.on.weather.utils.LocationProvider
@@ -20,6 +21,49 @@ class MainViewModel(
     val repository: MainRepository,
     private val locationProvider: LocationProvider,
 ): ViewModel() {
+    private val _uiState = MutableStateFlow(UiState.INIT)
+    val uiState: StateFlow<UiState> = _uiState
+
+    private val _errorMessageLiveData = MutableLiveData<ApiFailedResponse>()
+    val errorMessageLiveData: LiveData<ApiFailedResponse>
+        get() = _errorMessageLiveData
+
+    private val _weatherLiveData = MutableStateFlow<CityForecastWeatherData?>(null)
+    val weatherLiveData: StateFlow<CityForecastWeatherData?>
+        get() = _weatherLiveData
+
+    private val _hoursLiveData = MutableStateFlow<List<Hour>?>(null)
+    val hourLiveData: StateFlow<List<Hour>?>
+        get() = _hoursLiveData
+
+    private val _citiesLiveData = MutableStateFlow<List<SimpleCityData>?>(null)
+    val citiesLiveData: StateFlow<List<SimpleCityData>?>
+        get() = _citiesLiveData
+
+
+    fun fetchCities() {
+        viewModelScope.launch {
+            val res = repository.getCities()
+            if (res.hasError) {
+                _errorMessageLiveData.value = res.error!!
+            } else if (res.data != null) {
+                val list = arrayListOf<SimpleCityData>()
+                res.data!!.forEach { countryData ->
+                    countryData.capital?.forEach { capital ->
+                        list.add(
+                            SimpleCityData(
+                                cityName = capital,
+                                capitalInfo = countryData.capitalInfo,
+                                countryName = countryData.name.common,
+                            )
+                        )
+                    }
+
+                }
+                _citiesLiveData.value = list
+            }
+        }
+    }
 
     fun getWeatherByCity(city: String) {
         getWeather(city)
@@ -51,21 +95,6 @@ class MainViewModel(
         val hours = forecastday.flatMap { it.hour }.filter { it.time_epoch in range }.toList()
         _hoursLiveData.value = hours
     }
-
-    private val _uiState = MutableStateFlow(UiState.INIT)
-    val uiState: StateFlow<UiState> = _uiState
-
-    private val _errorMessageLiveData = MutableLiveData<ApiFailedResponse>()
-    val errorMessageLiveData: LiveData<ApiFailedResponse>
-        get() = _errorMessageLiveData
-
-    private val _weatherLiveData = MutableStateFlow<CityForecastWeatherData?>(null)
-    val weatherLiveData: StateFlow<CityForecastWeatherData?>
-        get() = _weatherLiveData
-
-    private val _hoursLiveData = MutableStateFlow<List<Hour>?>(null)
-    val hourLiveData: StateFlow<List<Hour>?>
-        get() = _hoursLiveData
 
     fun fetchCurrentLocation() {
         viewModelScope.launch {
