@@ -31,6 +31,7 @@ class MainViewModel(
 
     fun getWeather(q: String, days: Int = 7) {
         viewModelScope.launch {
+            _uiState.value = UiState.LOADING
             val res = repository.getWeather(q, days)
             if (res.hasError) {
                 _errorMessageLiveData.value = res.error!!

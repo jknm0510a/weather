@@ -29,8 +29,11 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
@@ -129,19 +132,62 @@ fun WeatherScreen(
 ) {
     val uiState by viewmodel.uiState.collectAsState()
     val weatherData: CityForecastWeatherData? by viewmodel.weatherLiveData.collectAsState()
+    Surface(
+        modifier = Modifier.fillMaxSize(),
+        color = MaterialTheme.colorScheme.background
+    ) {
+        when (uiState) {
+            UiState.INIT -> {
+                InitView()
+            }
+            UiState.LOADING -> {
+                LoadingView()
+            }
 
-    when(uiState) {
-        UiState.INIT -> Unit
-        UiState.LOADING -> {
+            UiState.FAILED -> {
+            }
 
-        }
-        UiState.FAILED -> {
-        }
-        UiState.SUCCESS -> {
-            if (weatherData != null) {
-                WeatherView(weatherData!!)
+            UiState.SUCCESS -> {
+                if (weatherData != null) {
+                    WeatherView(weatherData!!)
+                }
             }
         }
+    }
+}
+
+@Composable
+fun InitView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(
+                R.drawable.bg_full_day_night
+            ),
+            contentDescription = "Background Image",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+    }
+}
+
+@Composable
+fun LoadingView() {
+    Box(
+        modifier = Modifier.fillMaxSize(),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = painterResource(
+                R.drawable.bg_full_day_night
+            ),
+            contentDescription = "Background Image",
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
+        CircularProgressIndicator()
     }
 }
 
