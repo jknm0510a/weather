@@ -1,5 +1,11 @@
 package com.on.weather.data
 
+import java.time.Instant
+import java.time.LocalDateTime
+import java.time.ZoneId
+import java.time.format.DateTimeFormatter
+import java.util.Locale
+
 data class CityWeatherData(
     val location: Location,
     val current: Current
@@ -74,8 +80,19 @@ data class ForecastDay(
     val date_epoch: Long,
     val day: Day,
     val astro: Astro,
-    val hour: List<Hour>
-)
+    val hour: List<Hour>,
+) {
+    val dayOfWeek: String
+        get() = formatEpochToDateString(date_epoch, "E")
+
+    fun formatEpochToDateString(epochSeconds: Long, format: String): String {
+        val instant = Instant.ofEpochSecond(epochSeconds)
+        val dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
+        val formatter = DateTimeFormatter.ofPattern(format, Locale.US)
+        // 4. 進行格式化並回傳
+        return dateTime.format(formatter)
+    }
+}
 
 data class Day(
     val maxtemp_c: Double,

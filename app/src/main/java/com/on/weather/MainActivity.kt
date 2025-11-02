@@ -18,11 +18,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentSize
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -44,6 +46,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.colorResource
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.text
@@ -57,6 +60,7 @@ import coil.compose.AsyncImage
 import coil.compose.rememberAsyncImagePainter
 import coil.request.ImageRequest
 import com.on.weather.data.CityForecastWeatherData
+import com.on.weather.data.ForecastDay
 import com.on.weather.data.Hour
 import com.on.weather.data.UiState
 import com.on.weather.ui.theme.WeatherTheme
@@ -217,7 +221,7 @@ fun WeatherView(
                 modifier = Modifier
                     .wrapContentSize()
                     .padding(innerPadding)
-                    .padding(horizontal = 24.dp, vertical = 64.dp),
+                    .padding(horizontal = 24.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.Start
             ) {
                 Row(
@@ -230,11 +234,11 @@ fun WeatherView(
                         fontWeight = FontWeight.Bold,
                         color = Color.White
                     )
-                    Spacer(modifier = Modifier.width(8.dp)) // 在文字和圖示之間加一點間距
+                    Spacer(modifier = Modifier.width(8.dp))
 
                     Icon(
                         imageVector =  Icons.Default.Refresh,
-                        contentDescription = "重新整理天氣資訊",
+                        contentDescription = "Refresh",
                         tint = Color.White, // 設定圖示顏色
                         modifier = Modifier
                             .size(28.dp)
@@ -293,6 +297,19 @@ fun WeatherView(
                         HourlyForecastItem(index, hour = hour)
                     }
                 }
+
+                Spacer(modifier = Modifier.height(16.dp))
+                Box(modifier = Modifier.fillMaxSize()) {
+                    LazyColumn(
+                        contentPadding = PaddingValues(horizontal = 0.dp),
+                        verticalArrangement = Arrangement.spacedBy(12.dp),
+                        modifier = Modifier.padding(top = 24.dp)
+                    ) {
+                        itemsIndexed(weatherData.forecast.forecastday) { index, forecastDay ->
+                            DailyForecastItem(index, forecastDay)
+                        }
+                    }
+                }
             }
         }
     }
@@ -313,10 +330,10 @@ private fun HourlyForecastItem(index: Int, hour: Hour) {
     Column(
         modifier = Modifier
             .clip(RoundedCornerShape(12.dp))
-            .background(Color.White.copy(alpha = 0.15f)) // 半透明背景
+            .background(Color.White.copy(alpha = 0.15f))
             .padding(horizontal = 20.dp, vertical = 12.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(8.dp) // 內部元件的垂直間距
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
             text = if (index == 0) stringResource(R.string.now) else time,
@@ -338,6 +355,48 @@ private fun HourlyForecastItem(index: Int, hour: Hour) {
             text = "${hour.temp_c}°",
             color = Color.White,
             fontSize = 18.sp
+        )
+    }
+}
+
+@Composable
+fun DailyForecastItem(index: Int, forecastDay: ForecastDay) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(RoundedCornerShape(12.dp))
+            .background(Color.White.copy(alpha = 0.15f))
+            .padding(horizontal = 20.dp, vertical = 12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+
+        Text(
+            text =  if (index == 0) stringResource(R.string.today) else forecastDay.dayOfWeek,
+            color = Color.White,
+            fontWeight = FontWeight.Bold,
+            fontSize = 16.sp
+        )
+
+        Image(
+            painter = rememberAsyncImagePainter("https:${forecastDay.day.condition.icon}"),
+            contentDescription = null,
+            contentScale = ContentScale.Fit,
+            modifier = Modifier
+                .width(40.dp)
+                .height(40.dp)
+        )
+
+        Text(
+            text = "${forecastDay.day.daily_chance_of_rain}%",
+            color = colorResource(R.color.text_color),
+            fontSize = 16.sp
+        )
+        Spacer(Modifier.weight(1f))
+        Text(
+            text = "${forecastDay.day.maxtemp_c}°C - ${forecastDay.day.mintemp_c}°C",
+            color = colorResource(R.color.text_color),
+            fontSize = 16.sp
         )
     }
 }
