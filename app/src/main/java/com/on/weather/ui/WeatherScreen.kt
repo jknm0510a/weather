@@ -50,7 +50,6 @@ fun WeatherScreen(
 ) {
     val hours by viewModel.hourLiveData.collectAsState()
     Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
-        //Background
         Box(modifier = Modifier.fillMaxSize()) {
             Image(
                 painter = painterResource(
@@ -87,7 +86,7 @@ fun WeatherScreen(
                     Icon(
                         imageVector =  Icons.Default.Refresh,
                         contentDescription = "Refresh",
-                        tint = Color.White, // 設定圖示顏色
+                        tint = Color.White,
                         modifier = Modifier
                             .size(28.dp)
                             .clickable {
@@ -98,7 +97,7 @@ fun WeatherScreen(
                     Icon(
                         imageVector =  Icons.Default.AddCircle,
                         contentDescription = "Select Other City",
-                        tint = Color.White, // 設定圖示顏色
+                        tint = Color.White,
                         modifier = Modifier
                             .size(28.dp)
                             .clickable {

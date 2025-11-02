@@ -19,16 +19,13 @@ object AppRoutes {
 
 @Composable
 fun WeatherAppNavigation() {
-    // 2. 建立 NavController
     val navController = rememberNavController()
     val viewModel: MainViewModel = koinViewModel()
 
-    // 3. 設定 NavHost，並定義轉場動畫
     NavHost(
         navController = navController,
-        startDestination = AppRoutes.WEATHER_SCREEN // 設定起始畫面
+        startDestination = AppRoutes.WEATHER_SCREEN
     ) {
-        // --- 第一個畫面：天氣主畫面 ---
         composable(AppRoutes.WEATHER_SCREEN) {
             val uiState by viewModel.uiState.collectAsState()
             val weatherData by viewModel.weatherLiveData.collectAsState()
@@ -38,7 +35,6 @@ fun WeatherAppNavigation() {
                 UiState.LOADING -> LoadingScreen()
                 UiState.SUCCESS -> {
                     weatherData?.let {
-                        // 傳遞 navController 和 ViewModel
                         WeatherScreen(
                             weatherData = it,
                             viewModel = viewModel,
@@ -48,18 +44,16 @@ fun WeatherAppNavigation() {
                         )
                     }
                 }
-                UiState.FAILED -> { /* 處理錯誤畫面 */ }
+                UiState.FAILED -> { }
             }
         }
 
-        // --- 第二個畫面：城市選擇畫面 ---
         composable(
             route = AppRoutes.CITY_SELECTION_SCREEN,
-            // 4. *** 核心：定義進入和退出的動畫 ***
             enterTransition = {
                 slideIntoContainer(
                     AnimatedContentTransitionScope.SlideDirection.Left,
-                    animationSpec = tween(500) // 動畫時長 500 毫秒
+                    animationSpec = tween(500)
                 )
             },
             exitTransition = {
@@ -72,7 +66,7 @@ fun WeatherAppNavigation() {
             CitySelectionScreen(
                 viewModel,
                 onNavigateBack = {
-                    navController.popBackStack() // 返回上一個畫面
+                    navController.popBackStack()
                 }
             )
         }
