@@ -1,8 +1,6 @@
 package com.on.weather.viewmodel
 
 import android.util.Range
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.on.network.data.ApiFailedResponse

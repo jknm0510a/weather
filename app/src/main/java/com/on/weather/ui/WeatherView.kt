@@ -40,7 +40,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.on.weather.R
 import com.on.weather.data.CityForecastWeatherData
-import com.on.weather.data.UiState
 import com.on.weather.viewmodel.MainViewModel
 
 @Composable

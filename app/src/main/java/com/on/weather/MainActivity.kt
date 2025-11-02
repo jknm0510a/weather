@@ -3,6 +3,7 @@ package com.on.weather
 import android.Manifest
 import android.content.pm.PackageManager
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -22,7 +23,7 @@ class MainActivity : ComponentActivity() {
         if (permissions.getOrDefault(Manifest.permission.ACCESS_FINE_LOCATION, false)) {
             mainViewModel.fetchCurrentLocation()
         } else {
-            println("Location permission was denied.")
+            Toast.makeText(this, getString(R.string.location_permission_miss), Toast.LENGTH_SHORT).show()
         }
     }
 

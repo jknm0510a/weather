@@ -1,6 +1,5 @@
 package com.on.weather.repo
 
-import androidx.lifecycle.viewModelScope
 import com.on.network._interface.IHttpClient
 import com.on.network.data.ApiResponseData
 import com.on.network.data.UserInfo.TOKEN
@@ -8,7 +7,6 @@ import com.on.weather.api.ICityApi
 import com.on.weather.api.IWeatherApi
 import com.on.weather.data.CityForecastWeatherData
 import com.on.weather.data.CountryData
-import com.on.weather.data.Day
 
 class MainRepository(
     private val weatherClient: IHttpClient,

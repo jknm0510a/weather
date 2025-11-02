@@ -85,11 +85,10 @@ data class ForecastDay(
     val dayOfWeek: String
         get() = formatEpochToDateString(date_epoch, "E")
 
-    fun formatEpochToDateString(epochSeconds: Long, format: String): String {
+    private fun formatEpochToDateString(epochSeconds: Long, format: String): String {
         val instant = Instant.ofEpochSecond(epochSeconds)
         val dateTime = LocalDateTime.ofInstant(instant, ZoneId.systemDefault())
         val formatter = DateTimeFormatter.ofPattern(format, Locale.US)
-        // 4. 進行格式化並回傳
         return dateTime.format(formatter)
     }
 }
