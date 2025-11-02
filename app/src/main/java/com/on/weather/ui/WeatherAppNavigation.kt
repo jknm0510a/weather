@@ -21,30 +21,22 @@ object AppRoutes {
 fun WeatherAppNavigation() {
     val navController = rememberNavController()
     val viewModel: MainViewModel = koinViewModel()
-
+    val uiState by viewModel.uiState.collectAsState()
     NavHost(
         navController = navController,
         startDestination = AppRoutes.WEATHER_SCREEN
     ) {
         composable(AppRoutes.WEATHER_SCREEN) {
-            val uiState by viewModel.uiState.collectAsState()
-            val weatherData by viewModel.weatherLiveData.collectAsState()
-
-            when (uiState) {
-                UiState.INIT -> InitScreen()
-                UiState.LOADING -> LoadingScreen()
-                UiState.SUCCESS -> {
-                    weatherData?.let {
-                        WeatherScreen(
-                            weatherData = it,
-                            viewModel = viewModel,
-                            onNavigateToCitySelection = {
-                                navController.navigate(AppRoutes.CITY_SELECTION_SCREEN)
-                            }
-                        )
+            if (uiState == UiState.INIT) {
+                InitScreen()
+            } else {
+                WeatherScreen(
+                    uiState = uiState,
+                    viewModel = viewModel,
+                    onNavigateToCitySelection = {
+                        navController.navigate(AppRoutes.CITY_SELECTION_SCREEN)
                     }
-                }
-                UiState.FAILED -> { }
+                )
             }
         }
 
@@ -64,6 +56,7 @@ fun WeatherAppNavigation() {
             }
         ) {
             CitySelectionScreen(
+                uiState = uiState,
                 viewModel,
                 onNavigateBack = {
                     navController.popBackStack()

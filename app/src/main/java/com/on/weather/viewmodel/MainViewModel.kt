@@ -28,8 +28,8 @@ class MainViewModel(
     private val _uiState = MutableStateFlow(UiState.INIT)
     val uiState: StateFlow<UiState> = _uiState
 
-    private val _errorMessageLiveData = MutableLiveData<ApiFailedResponse>()
-    val errorMessageLiveData: LiveData<ApiFailedResponse>
+    private val _errorMessageLiveData = MutableStateFlow<ApiFailedResponse?>(null)
+    val errorMessageLiveData: MutableStateFlow<ApiFailedResponse?>
         get() = _errorMessageLiveData
 
     private val _weatherLiveData = MutableStateFlow<CityForecastWeatherData?>(null)
@@ -47,8 +47,10 @@ class MainViewModel(
 
     fun fetchCities() {
         viewModelScope.launch {
+            _uiState.value = UiState.LOADING
             val res = repository.getCities()
             if (res.hasError) {
+                _uiState.value = UiState.FAILED
                 _errorMessageLiveData.value = res.error!!
             } else if (res.data != null) {
                 val list = arrayListOf<SimpleCityData>()
@@ -77,6 +79,7 @@ class MainViewModel(
                         )
                     }
                 }
+                _uiState.value = UiState.SUCCESS
             }
         }
     }
