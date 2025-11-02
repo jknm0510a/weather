@@ -16,6 +16,7 @@ koin = "3.5.0"
 startupRuntime = "1.2.0"
 googleServices = "21.3.0"
 coil = "2.5.0"
+navigation = "2.8.0-beta05"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -42,6 +43,7 @@ koin-compose = { group = "io.insert-koin", name = "koin-androidx-compose", versi
 startup = { group = "androidx.startup", name = "startup-runtime", version.ref = "startupRuntime" }
 google-services = { group = "com.google.android.gms", name = "play-services-location", version.ref = "googleServices" }
 coil = { group = "io.coil-kt", name = "coil-compose", version.ref = "coil" }
+navigation-compose = { group = "androidx.navigation", name = "navigation-compose", version.ref = "navigation" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

@@ -54,6 +54,7 @@ dependencies {
     implementation(libs.startup)
     implementation(libs.google.services)
     implementation(libs.coil)
+    implementation(libs.navigation.compose)
     testImplementation(libs.junit)
     implementation(project(":network"))
     androidTestImplementation(libs.androidx.junit)
