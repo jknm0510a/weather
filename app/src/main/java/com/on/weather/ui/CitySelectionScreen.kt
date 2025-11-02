@@ -87,6 +87,7 @@ fun CitySelectionScreen(
                 ) {
                     itemsIndexed(cities?:listOf()) { _, city ->
                         CityItem(city) { cityName ->
+                            viewModel.changeSelectCity(cityName)
                             viewModel.getWeatherByCity(cityName)
                             onNavigateBack()
                         }

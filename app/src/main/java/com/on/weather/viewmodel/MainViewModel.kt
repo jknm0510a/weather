@@ -13,6 +13,7 @@ import com.on.weather.data.SimpleCityData
 import com.on.weather.data.UiState
 import com.on.weather.repo.MainRepository
 import com.on.weather.utils.LocationProvider
+import kotlinx.coroutines.async
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.launch
@@ -21,6 +22,9 @@ class MainViewModel(
     val repository: MainRepository,
     private val locationProvider: LocationProvider,
 ): ViewModel() {
+    private var currentLocationName = "Taipei"
+
+    private var currentSelectCityName = currentLocationName
     private val _uiState = MutableStateFlow(UiState.INIT)
     val uiState: StateFlow<UiState> = _uiState
 
@@ -50,42 +54,68 @@ class MainViewModel(
                 val list = arrayListOf<SimpleCityData>()
                 res.data!!.forEach { countryData ->
                     countryData.capital?.forEach { capital ->
-                        list.add(
-                            SimpleCityData(
-                                cityName = capital,
-                                capitalInfo = countryData.capitalInfo,
-                                countryName = countryData.name.common,
+                        if (capital != currentLocationName) {
+                            list.add(
+                                SimpleCityData(
+                                    cityName = capital,
+                                    capitalInfo = countryData.capitalInfo,
+                                    countryName = countryData.name.common,
+                                )
+                            )
+                        }
+                    }
+                }
+                _citiesLiveData.value = list.sortedBy { it.cityName }.toMutableList().apply {
+                    if (currentLocationName.isNotEmpty()) {
+                        add(
+                            index = 0,
+                            element = SimpleCityData(
+                                cityName = currentLocationName,
+                                capitalInfo = null,
+                                countryName = "LOCATION",
                             )
                         )
                     }
-
                 }
-                _citiesLiveData.value = list
             }
         }
     }
 
     fun getWeatherByCity(city: String) {
-        getWeather(city)
-    }
-
-    fun getCityWeatherByLocation(lat: Double, lon: Double) {
-        getWeather("$lat,$lon")
-    }
-
-    fun getWeather(q: String, days: Int = 7) {
         viewModelScope.launch {
-            _uiState.value = UiState.LOADING
-            val res = repository.getWeather(q, days)
-            if (res.hasError) {
-                _errorMessageLiveData.value = res.error!!
-                _uiState.value = UiState.FAILED
-            } else if (res.data != null) {
-                _weatherLiveData.value = res.data!!
-                process24HoursForecast(res.data!!.forecast.forecastday)
-                _uiState.value = UiState.SUCCESS
-            }
+            getWeather(city)
         }
+    }
+
+    fun refreshCurrentCityWeather() {
+        getWeatherByCity(currentSelectCityName)
+    }
+
+    fun changeSelectCity(city: String) {
+        currentSelectCityName = city
+    }
+
+
+    suspend fun getCityWeatherByLocation(lat: Double, lon: Double) : String {
+        return viewModelScope.async {
+            getWeather("$lat,$lon")
+        }.await()
+    }
+
+    suspend fun getWeather(q: String, days: Int = 7): String {
+        _uiState.value = UiState.LOADING
+        val res = repository.getWeather(q, days)
+        if (res.hasError) {
+            _errorMessageLiveData.value = res.error!!
+            _uiState.value = UiState.FAILED
+            return ""
+        } else if (res.data != null) {
+            _weatherLiveData.value = res.data!!
+            process24HoursForecast(res.data!!.forecast.forecastday)
+            _uiState.value = UiState.SUCCESS
+            return res.data!!.location.name
+        }
+        return ""
     }
 
     fun process24HoursForecast(forecastday: List<ForecastDay>) {
@@ -100,7 +130,11 @@ class MainViewModel(
         viewModelScope.launch {
             try {
                 val location = locationProvider.getCurrentLocation()
-                getCityWeatherByLocation(location.latitude, location.longitude)
+                val locationName = getCityWeatherByLocation(location.latitude, location.longitude)
+                if (locationName.isNotEmpty()) {
+                    currentLocationName = locationName
+                    currentSelectCityName = locationName
+                }
             } catch (e: SecurityException) {
                 e.printStackTrace()
             } catch (e: Exception) {

@@ -91,8 +91,7 @@ fun WeatherScreen(
                         modifier = Modifier
                             .size(28.dp)
                             .clickable {
-                                println("Refresh icon clicked!")
-                                viewModel.getWeatherByCity("London")
+                                viewModel.refreshCurrentCityWeather()
                             }
                     )
                     Spacer(Modifier.weight(1f))

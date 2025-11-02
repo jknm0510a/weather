@@ -10,8 +10,13 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Place
+import androidx.compose.material.icons.filled.Refresh
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -138,10 +143,20 @@ fun CityItem(
             fontSize = 16.sp
         )
         Spacer(Modifier.weight(1f))
-        Text(
-            text =  simpleCountryData.countryName,
-            color = Color.White,
-            fontSize = 14.sp,
-        )
+        if (simpleCountryData.countryName == "LOCATION") {
+            Icon(
+                imageVector =  Icons.Default.Place,
+                contentDescription = "LOCATION",
+                tint = Color.White,
+                modifier = Modifier
+                    .size(28.dp),
+            )
+        } else {
+            Text(
+                text =  simpleCountryData.countryName,
+                color = Color.White,
+                fontSize = 14.sp,
+            )
+        }
     }
 }
