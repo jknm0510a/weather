@@ -1,0 +1,185 @@
+name: Gemini AI Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Get Git Diff
+        id: git_diff
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            git diff origin/${{ github.base_ref }}...HEAD > diff.txt
+          else
+            git diff HEAD~1...HEAD > diff.txt
+          fi
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run Gemini Code Review Skill
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          EVENT_NAME: ${{ github.event_name }}
+        shell: bash
+        run: |
+          cat << 'EOF' > review.js
+          const fs = require('fs');
+
+          async function run() {
+            const apiKey = process.env.GEMINI_API_KEY;
+            const prNumber = process.env.PR_NUMBER;
+            const repo = process.env.GITHUB_REPOSITORY;
+            const token = process.env.GITHUB_TOKEN;
+            const eventName = process.env.EVENT_NAME;
+
+            if (!apiKey) {
+              console.error("錯誤：找不到 GEMINI_API_KEY 環境變數，請至 GitHub 專案 Settings -> Secrets 設定。");
+              process.exit(1);
+            }
+
+            const diffContent = fs.readFileSync('diff.txt', 'utf8');
+            if (!diffContent.trim()) {
+              console.log("沒有程式碼變動，跳過 Review。");
+              process.exit(0);
+            }
+
+            const systemInstruction = `
+          你是一位極度嚴苛、具備 15 年經驗的資深 Android 系統架構師與資安專家。
+          請針對以下 Android 專案的程式碼差分（Git Diff）進行深入的 Code Review：
+
+          請特別針對以下 Android 特性進行審查：
+          1. **記憶體洩漏與生命週期 (Lifecycle & Memory Leaks)**：
+             - 檢查是否有非靜態內部類別、Handler、RxJava 或 Coroutine 沒在 onDestroy/onCleared 中釋放。
+             - 是否有錯誤持有 Context (尤其是 Activity Context) 導致洩漏。
+          2. **執行緒安全性 (Threading & Coroutines)**：
+             - 檢查是否在 Main Thread（主執行緒）進行耗時的 I/O 或網路操作。
+             - Coroutines 是否正確使用 Dispatchers (如 Dispatchers.IO, Dispatchers.Main)。
+          3. **UI 效能 (UI & Compose Performance)**：
+             - 如果是 Jetpack Compose：檢查是否有不必要的重組 (Recomposition)、Remember 遺漏或過度建立物件。
+             - 如果是 XML Layout：檢查佈局巢狀層級是否過深、是否有過度繪製 (Overdraw) 的隱憂。
+          4. **Android 資安 (Security)**：
+             - 檢查是否在代碼中、AndroidManifest.xml 中硬編碼 (Hardcode) 敏感金鑰 (API Keys, Tokens)。
+             - 檢查 Activity, Service, Receiver 的 android:exported 是否安全。
+          5. **Kotlin/Java 程式碼美學**：
+             - 是否符合 Kotlin 的 Idiomatic 寫法（如 let, run, apply, map, filter 的正確使用）。
+
+          請用「繁體中文（台灣）」回覆，格式請使用 Markdown，並包含以下三個區段：
+          - 🛠️ 嚴重 Android 問題（必須修正，否則可能崩難、記憶體洩漏或有資安風險）
+          - 💡 優化與效能建議（包含 Kotlin 寫法、Compose/XML 效能、依賴庫管理）
+          - 👍 寫得好的地方（給予正面肯定）
+
+          【非常重要：狀態標記規則】
+          - 如果你判定程式碼中含有任何「🛠️ 嚴重 Android 問題」區段底下的致命地雷（如記憶體洩漏、主執行緒同步網路、金鑰外洩、Coroutines 執行緒指派錯誤等），請務必在回覆內容的「最後一行」，單獨輸出此標記：[STATUS: FAILED]
+          - 如果程式碼非常安全，沒有任何「🛠️ 嚴重 Android 問題」底下的項目，請務必在回覆內容的「最後一行」，單獨輸出此標記：[STATUS: PASSED]
+          `;
+
+            const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+            const geminiPayload = {
+              contents: [
+                {
+                  role: 'user',
+                  parts: [{ text: `這是本次提交的程式碼變動（Git Diff）：\n\n${diffContent}` }]
+                }
+              ],
+              systemInstruction: {
+                parts: [{ text: systemInstruction }]
+              },
+              generationConfig: {
+                temperature: 0.2
+              }
+            };
+
+            try {
+              console.log("正在發送 Diff 給 Gemini API 進行審查...");
+              const response = await fetch(geminiUrl, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(geminiPayload)
+              });
+
+              if (!response.ok) {
+                const errText = await response.text();
+                throw new Error(`Gemini API 錯誤: ${response.status} - ${errText}`);
+              }
+
+              const json = await response.json();
+              const reviewResult = json.candidates[0].content.parts[0].text;
+
+              // 判斷是否含有 Failed 標籤
+              const isFailed = reviewResult.includes('[STATUS: FAILED]');
+
+              // 移除結尾的狀態標記，避免顯示在 PR 評論中顯得突兀
+              const cleanReviewResult = reviewResult
+                .replace('[STATUS: FAILED]', '')
+                .replace('[STATUS: PASSED]', '')
+                .trim();
+
+              console.log("\n=== 🤖 Gemini Code Review 報告 ===");
+              console.log(cleanReviewResult);
+              console.log("=================================\n");
+
+              if (eventName === 'pull_request' && prNumber && token) {
+                console.log(`正在發送評論到 PR #${prNumber}...`);
+                const ghUrl = `https://api.github.com/repos/${repo}/issues/${prNumber}/comments`;
+                const ghPayload = {
+                  body: `### 🤖 Gemini Android Code Review 報告\n\n${cleanReviewResult}`
+                };
+
+                const ghResponse = await fetch(ghUrl, {
+                  method: 'POST',
+                  headers: {
+                    'Authorization': `Bearer ${token}`,
+                    'Accept': 'application/vnd.github.v3+json',
+                    'User-Agent': 'github-actions-gemini-reviewer',
+                    'Content-Type': 'application/json'
+                  },
+                  body: JSON.stringify(ghPayload)
+                });
+
+                if (!ghResponse.ok) {
+                  const ghErr = await ghResponse.text();
+                  console.error(`無法在 GitHub 發送評論: ${ghResponse.status} - ${ghErr}`);
+                } else {
+                  console.log("成功在 GitHub PR 留下 Review 評論！");
+                }
+              }
+
+              // 根據審查狀態決定是否阻擋（Fail）本次 GitHub Action
+              if (isFailed) {
+                console.error("\n❌ 【審查未通過】程式碼中包含嚴重的 Android 效能、安全或生命週期地雷！本次工作流執行失敗！\n");
+                process.exit(1);
+              } else {
+                console.log("\n✅ 【審查通過】沒有發現嚴重的致命問題，允許通過！\n");
+                process.exit(0);
+              }
+
+            } catch (error) {
+              console.error("執行 Code Review 時發生錯誤:", error);
+              process.exit(1);
+            }
+          }
+
+          run();
+          EOF
+
+          node review.js
