@@ -83,10 +83,14 @@ jobs:
           5. **Kotlin/Java 程式碼美學**：
              - 是否符合 Kotlin 的 Idiomatic 寫法（如 let, run, apply, map, filter 的正確使用）。
 
-          請用「繁體中文（台灣）」回覆，格式請使用 Markdown，並列出：
-          - 🛠️ 嚴重 Android 問題（必須修正，否則可能崩潰、記憶體洩漏或有資安風險）
+          請用「繁體中文（台灣）」回覆，格式請使用 Markdown，並包含以下三個區段：
+          - 🛠️ 嚴重 Android 問題（必須修正，否則可能崩難、記憶體洩漏或有資安風險）
           - 💡 優化與效能建議（包含 Kotlin 寫法、Compose/XML 效能、依賴庫管理）
           - 👍 寫得好的地方（給予正面肯定）
+
+          【非常重要：狀態標記規則】
+          - 如果你判定程式碼中含有任何「🛠️ 嚴重 Android 問題」區段底下的致命地雷（如記憶體洩漏、主執行緒同步網路、金鑰外洩、Coroutines 執行緒指派錯誤等），請務必在回覆內容的「最後一行」，單獨輸出此標記：[STATUS: FAILED]
+          - 如果程式碼非常安全，沒有任何「🛠️ 嚴重 Android 問題」底下的項目，請務必在回覆內容的「最後一行」，單獨輸出此標記：[STATUS: PASSED]
           `;
 
             const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
@@ -121,15 +125,24 @@ jobs:
               const json = await response.json();
               const reviewResult = json.candidates[0].content.parts[0].text;
 
+              // 判斷是否含有 Failed 標籤
+              const isFailed = reviewResult.includes('[STATUS: FAILED]');
+
+              // 移除結尾的狀態標記，避免顯示在 PR 評論中顯得突兀
+              const cleanReviewResult = reviewResult
+                .replace('[STATUS: FAILED]', '')
+                .replace('[STATUS: PASSED]', '')
+                .trim();
+
               console.log("\n=== 🤖 Gemini Code Review 報告 ===");
-              console.log(reviewResult);
+              console.log(cleanReviewResult);
               console.log("=================================\n");
 
               if (eventName === 'pull_request' && prNumber && token) {
                 console.log(`正在發送評論到 PR #${prNumber}...`);
                 const ghUrl = `https://api.github.com/repos/${repo}/issues/${prNumber}/comments`;
                 const ghPayload = {
-                  body: `### 🤖 Gemini Android Code Review 報告\n\n${reviewResult}`
+                  body: `### 🤖 Gemini Android Code Review 報告\n\n${cleanReviewResult}`
                 };
 
                 const ghResponse = await fetch(ghUrl, {
@@ -150,6 +163,16 @@ jobs:
                   console.log("成功在 GitHub PR 留下 Review 評論！");
                 }
               }
+
+              // 根據審查狀態決定是否阻擋（Fail）本次 GitHub Action
+              if (isFailed) {
+                console.error("\n❌ 【審查未通過】程式碼中包含嚴重的 Android 效能、安全或生命週期地雷！本次工作流執行失敗！\n");
+                process.exit(1);
+              } else {
+                console.log("\n✅ 【審查通過】沒有發現嚴重的致命問題，允許通過！\n");
+                process.exit(0);
+              }
+
             } catch (error) {
               console.error("執行 Code Review 時發生錯誤:", error);
               process.exit(1);
